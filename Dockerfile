@@ -6,7 +6,10 @@ FROM python:3.13-slim AS build-stage
 WORKDIR /build
 
 # Устанавливаем зависимости для сборки
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get update --fix-missing && \
+    apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 

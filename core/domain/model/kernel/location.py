@@ -28,7 +28,7 @@ class Location:
     #     return self.y
 
     # def __eq__(self, other: "Location") -> bool:
-    #     return self.x == other.x and self.y == other.y and self._valid == other._valid
+    #     return self.x == other.x and self.y == other.y
 
     def distance_to(self, target: "Location") -> int:
         return abs(self.x - target.x) + abs(self.y - target.y)
@@ -38,6 +38,6 @@ class Location:
 
     @staticmethod
     def new_random_location() -> "Location":
-        randomx = random.randint(MIN_COORDINATE, MAX_COORDINATE)
-        randomy = random.randint(MIN_COORDINATE, MAX_COORDINATE)
-        return Location(x=randomx, y=randomy)
+        random_x = random.randint(MIN_COORDINATE, MAX_COORDINATE)
+        random_y = random.randint(MIN_COORDINATE, MAX_COORDINATE)
+        return Location(x=random_x, y=random_y)

@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import health
+from api.adapters.http.v1.endpoints import health
 
 router = APIRouter()
 

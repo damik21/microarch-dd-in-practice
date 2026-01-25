@@ -41,6 +41,11 @@ dmypy.json
 .pyre/
 .pytype/
 .ruff_cache/
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+coverage.xml
+*.cover
+.hypothesis/
 
 # Virtual environments
 venv/
@@ -52,16 +57,23 @@ ENV/
 .env
 .env.local
 .env.*.local
+.env.*
 !.env.example
+!.env.template
 
 # Database
 *.db
 *.sqlite
 *.sqlite3
+*.db-journal
+*.db-shm
+*.db-wal
 
 # Logs
 *.log
 logs/
+*.log.*
+*.out.log
 
 # Docker
 build/docker/.env
@@ -77,6 +89,24 @@ tmp/*
 .tmp/*
 !.tmp/.keep
 
+# FastAPI / Pydantic
+.pydantic_cache/
+*.pydantic.json
+
+# Backup files
+*.bak
+*.backup
+
+# Local configuration
+config.local.*
+settings.local.*
+local_settings.py
+
 # OS
 .DS_Store
 Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db

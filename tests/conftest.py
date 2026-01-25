@@ -1,10 +1,10 @@
 """Pytest configuration and fixtures."""
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from app.core.database import Base, get_db
-from app.core.config import settings
+from app.core.database import Base
+from config.config import settings
 
 
 @pytest.fixture

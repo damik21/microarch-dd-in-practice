@@ -1,8 +1,6 @@
-"""Главный роутер API v1."""
-
 from fastapi import APIRouter
 
-from api.adapters.http.v1.endpoints import health
+from api.adapters.http import health
 
 router = APIRouter()
 

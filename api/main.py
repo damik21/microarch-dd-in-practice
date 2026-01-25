@@ -1,24 +1,13 @@
-"""Точка входа приложения."""
-
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api.v1.router import router as v1_router
+from api.adapters.http.router import router as v1_router
 from config.config import settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Управление жизненным циклом приложения.
-
-    Args:
-        app: Экземпляр FastAPI приложения.
-
-    Yields:
-        None
-    """
     # Startup
     yield
     # Shutdown

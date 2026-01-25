@@ -1,0 +1,140 @@
+version: '3.8'
+
+services:
+  # PostgreSQL база данных
+  postgres:
+    image: postgres:16-alpine
+    container_name: delivery-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-username}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+      POSTGRES_DB: ${DB_NAME:-delivery}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-username}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - delivery-network
+
+  # FastAPI веб-сервер
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build-release-stage
+    container_name: delivery-api
+    environment:
+      HTTP_PORT: ${HTTP_PORT:-8082}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-username}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      DB_NAME: ${DB_NAME:-delivery}
+      DB_SSLMODE: ${DB_SSLMODE:-disable}
+      GEO_SERVICE_GRPC_HOST: ${GEO_SERVICE_GRPC_HOST:-0.0.0.0:5004}
+      KAFKA_HOST: ${KAFKA_HOST:-kafka:9092}
+      KAFKA_CONSUMER_GROUP: ${KAFKA_CONSUMER_GROUP:-delivery-service-group}
+      KAFKA_BASKET_CONFIRMED_TOPIC: ${KAFKA_BASKET_CONFIRMED_TOPIC:-basket.confirmed}
+      KAFKA_ORDER_CHANGED_TOPIC: ${KAFKA_ORDER_CHANGED_TOPIC:-order.status.changed}
+    ports:
+      - "${HTTP_PORT:-8082}:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8082 --reload
+    networks:
+      - delivery-network
+    volumes:
+      - .:/app  # Для hot reload в разработке
+
+  # Kafka consumer для basket.confirmed
+  kafka-consumer-basket:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build-release-stage
+    container_name: delivery-kafka-consumer-basket
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-username}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      DB_NAME: ${DB_NAME:-delivery}
+      DB_SSLMODE: ${DB_SSLMODE:-disable}
+      KAFKA_HOST: ${KAFKA_HOST:-kafka:9092}
+      KAFKA_CONSUMER_GROUP: ${KAFKA_CONSUMER_GROUP:-delivery-service-group}
+      KAFKA_BASKET_CONFIRMED_TOPIC: ${KAFKA_BASKET_CONFIRMED_TOPIC:-basket.confirmed}
+      KAFKA_ORDER_CHANGED_TOPIC: ${KAFKA_ORDER_CHANGED_TOPIC:-order.status.changed}
+    depends_on:
+      - postgres
+      - kafka
+    command: python -m app.consumers.kafka_consumer
+    networks:
+      - delivery-network
+    restart: unless-stopped
+
+  # Outbox processor
+  outbox-processor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build-release-stage
+    container_name: delivery-outbox-processor
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-username}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      DB_NAME: ${DB_NAME:-delivery}
+      DB_SSLMODE: ${DB_SSLMODE:-disable}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: python -m app.consumers.outbox_processor
+    networks:
+      - delivery-network
+    restart: unless-stopped
+
+  # Kafka (для локальной разработки)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: delivery-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - delivery-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: delivery-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - delivery-network
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
+networks:
+  delivery-network:
+    driver: bridge

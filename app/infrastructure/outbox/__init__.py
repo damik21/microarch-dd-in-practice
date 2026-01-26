@@ -1,1 +1,0 @@
-"""Outbox pattern implementation."""

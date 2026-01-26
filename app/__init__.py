@@ -1,1 +1,0 @@
-"""Delivery service application."""

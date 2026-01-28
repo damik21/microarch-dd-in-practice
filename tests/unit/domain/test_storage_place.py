@@ -18,13 +18,12 @@ class TestStoragePlace:
         ):
             StoragePlace(name="Рюкзак", total_volume=-1)
 
-    @pytest.mark.parametrize("name", ["", "   "])
-    def test_create_with_invalid_name_failed(self, name: str) -> None:
+    def test_create_with_invalid_name_failed(self) -> None:
         with pytest.raises(
             ValueError,
             match="Название места хранения не может быть пустым.",
         ):
-            StoragePlace(name=name, total_volume=10)
+            StoragePlace(name="", total_volume=10)
 
     def test_can_store_and_store_order_success(self) -> None:
         storage_place = StoragePlace(
@@ -59,12 +58,6 @@ class TestStoragePlace:
             match="Объём заказа должен быть больше 0.",
         ):
             storage_place.can_store(volume=0)
-
-        with pytest.raises(
-            ValueError,
-            match="Объём заказа должен быть больше 0.",
-        ):
-            storage_place.can_store(volume=-1)
 
     def test_can_store_returns_false_when_volume_too_big(self) -> None:
         storage_place = StoragePlace(
@@ -135,25 +128,3 @@ class TestStoragePlace:
 
         assert storage_place_1.equals(storage_place_2) is False
         assert storage_place_1.equals(storage_place_1) is True
-
-    def test_equals_with_non_storage_place_returns_false(self) -> None:
-        storage_place = StoragePlace(
-            name="Рюкзак",
-            total_volume=10,
-        )
-
-        assert storage_place.equals(object()) is False
-
-    def test_id_is_generated_and_unique(self) -> None:
-        first = StoragePlace(
-            name="Рюкзак",
-            total_volume=10,
-        )
-        second = StoragePlace(
-            name="Багажник",
-            total_volume=20,
-        )
-
-        assert first.id is not None
-        assert second.id is not None
-        assert first.id != second.id

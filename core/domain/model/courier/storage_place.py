@@ -1,22 +1,64 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import field
 from uuid import UUID, uuid4
 
+from core.domain.exceptions.courier import OrderVolumeIncorrect
+from core.domain.exceptions.storage_place import (
+    StorageCannotStoreOrder,
+    StoragePlaceNameIncorrect,
+    StoragePlaceTotalValueIncorrect,
+)
 
-@dataclass
+
 class StoragePlace:
-    id: UUID = field(default_factory=uuid4, init=False)
-    name: str
-    total_volume: int
-    order_id: UUID | None = None
+    id: UUID
+    __name: str
+    __total_volume: int
+    __order_id: UUID | None = None
 
-    def __post_init__(self) -> None:
-        if not self.name.strip():
-            raise ValueError("Название места хранения не может быть пустым.")
+    @classmethod
+    def create(
+        cls,
+        name: str,
+        total_volume: int,
+        order_id: UUID | None = None,
+    ) -> StoragePlace:
+        if not name.strip():
+            raise StoragePlaceNameIncorrect(
+                "Название места хранения не может быть пустым."
+            )
+        if total_volume <= 0:
+            raise StoragePlaceTotalValueIncorrect(
+                "Допустимый объём места хранения должен быть больше 0."
+            )
+        return cls._new(name=name, total_volume=total_volume, order_id=order_id)
 
-        if self.total_volume <= 0:
-            raise ValueError("Допустимый объём места хранения должен быть больше 0.")
+    @classmethod
+    def _new(
+        cls,
+        name: str,
+        total_volume: int,
+        order_id: UUID | None = None,
+    ) -> StoragePlace:
+        instance = object.__new__(cls)
+        instance.id = uuid4()
+        instance._StoragePlace__name = name
+        instance._StoragePlace__total_volume = total_volume
+        instance._StoragePlace__order_id = order_id
+        return instance
+
+    def __init__(
+        self,
+        name: str = "",
+        total_volume: int = 0,
+        order_id: UUID | None = None,
+    ) -> None:
+        raise TypeError("Используйте StoragePlace.create() для создания экземпляра.")
+
+    @property
+    def order_id(self) -> UUID | None:
+        return self.__order_id
 
     def equals(self, other: object) -> bool:
         if not isinstance(other, StoragePlace):
@@ -24,25 +66,25 @@ class StoragePlace:
         return self.id == other.id
 
     def is_occupied(self) -> bool:
-        return self.order_id is not None
+        return self.__order_id is not None
 
     def can_store(self, volume: int) -> bool:
         if volume <= 0:
-            raise ValueError("Объём заказа должен быть больше 0.")
+            raise OrderVolumeIncorrect("Объём заказа должен быть больше 0.")
 
         if self.is_occupied():
             return False
 
-        return volume <= self.total_volume
+        return volume <= self.__total_volume
 
     def store(self, order_id: UUID, volume: int) -> None:
         if not self.can_store(volume):
-            raise ValueError(
+            raise StorageCannotStoreOrder(
                 "Невозможно поместить заказ в место хранения: "
                 "место уже занято или объём заказа превышает допустимый."
             )
 
-        self.order_id = order_id
+        self.__order_id = order_id
 
     def clear(self) -> None:
-        self.order_id = None
+        self.__order_id = None

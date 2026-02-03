@@ -1,3 +1,4 @@
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -7,10 +8,10 @@ from config.config import settings
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    # Запуск приложения
     yield
-    # Shutdown
+    # Остановка приложения
 
 
 app = FastAPI(

@@ -10,7 +10,6 @@ class Location:
     x: int
     y: int
 
-
     # MagicMethod для валидации после инициализации объекта
     def __post_init__(self) -> None:
         if self.x < MIN_COORDINATE or self.x > MAX_COORDINATE:

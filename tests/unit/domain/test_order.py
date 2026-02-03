@@ -83,4 +83,3 @@ class TestOrder:
             match="Завершить можно только назначенный заказ.",
         ):
             order.complete()
-

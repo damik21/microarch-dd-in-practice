@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import field
 from uuid import UUID, uuid4
 
 from core.domain.exceptions.courier import OrderVolumeIncorrect

@@ -4,8 +4,9 @@ import asyncio
 from logging.config import fileConfig
 
 from alembic import context
-from app.core.database import Base  # type: ignore[import-not-found]
 from sqlalchemy import pool
+
+from infrastructure.adapters.postgres.models.base import Base
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 

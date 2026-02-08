@@ -70,6 +70,21 @@ class Courier:
     ) -> None:
         raise TypeError("Используйте Courier.create() для создания экземпляра.")
 
+    @property
+    def name(self) -> str:
+        """Получить имя курьера."""
+        return self.__name
+
+    @property
+    def speed(self) -> int:
+        """Получить скорость курьера."""
+        return self.__speed
+
+    @property
+    def location(self) -> Location:
+        """Получить локацию курьера."""
+        return self.__location
+
     def add_storage_place(self, name: str, total_volume: int) -> StoragePlace:
         storage_place = StoragePlace.create(name=name, total_volume=total_volume)
         self.__storage_places.append(storage_place)

@@ -59,6 +59,16 @@ class StoragePlace:
     def order_id(self) -> UUID | None:
         return self.__order_id
 
+    @property
+    def name(self) -> str:
+        """Получить название места хранения."""
+        return self.__name
+
+    @property
+    def total_volume(self) -> int:
+        """Получить общий объём места хранения."""
+        return self.__total_volume
+
     def equals(self, other: object) -> bool:
         if not isinstance(other, StoragePlace):
             return False

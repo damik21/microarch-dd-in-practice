@@ -22,6 +22,7 @@ class Order:
     @classmethod
     def create(
         cls,
+        id: UUID,
         location: Location,
         volume: int,
     ) -> Order:

@@ -52,6 +52,9 @@ lint.ignore = [
     "E501",  # line too long (handled by formatter)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"api/dependencies.py" = ["B008"]  # FastAPI Depends() in argument defaults
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"

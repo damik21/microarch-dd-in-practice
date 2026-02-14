@@ -1,17 +1,25 @@
+import asyncio
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from api.adapters.http.router import router as v1_router
+from api.tasks import assign_orders, move_couriers, run_periodic
 from config.config import settings
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    # Запуск приложения
+    assign_task = asyncio.create_task(
+        run_periodic(assign_orders, interval=1, name="assign_orders")
+    )
+    move_task = asyncio.create_task(
+        run_periodic(move_couriers, interval=1, name="move_couriers")
+    )
     yield
-    # Остановка приложения
+    assign_task.cancel()
+    move_task.cancel()
 
 
 app = FastAPI(

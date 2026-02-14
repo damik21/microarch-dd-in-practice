@@ -37,7 +37,7 @@ class MoveCouriersHandler:
         if not orders:
             return results
 
-        couriers = await self._courier_repository.get_all_busy()
+        couriers = await self._courier_repository.get_all()
         if not couriers:
             return results
 

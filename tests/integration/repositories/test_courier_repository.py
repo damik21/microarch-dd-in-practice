@@ -281,7 +281,7 @@ class TestCourierRepository:
         await session.commit()
 
         # Act
-        busy_couriers = await repository.get_all_busy()
+        busy_couriers = await repository.get_all()
 
         # Assert
         assert len(busy_couriers) == 2
@@ -294,7 +294,7 @@ class TestCourierRepository:
         repository = CourierRepository(tracker)
 
         # Act
-        busy_couriers = await repository.get_all_busy()
+        busy_couriers = await repository.get_all()
 
         # Assert
         assert busy_couriers == []

@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from api.adapters.http.router import router as v1_router
 from api.tasks import assign_orders, move_couriers, run_periodic
@@ -37,6 +38,21 @@ app = FastAPI(
     description="Сервис доставки на основе DDD и Clean Architecture",
     version="1.0.0",
     lifespan=lifespan,
+)
+
+
+origins = [
+    "http://localhost:8086",
+    "http://127.0.0.1:8086",
+    "http://0.0.0.0:8086",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(v1_router, prefix="/api/v1")

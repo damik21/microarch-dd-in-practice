@@ -19,14 +19,16 @@ if TYPE_CHECKING:
 
 
 def domain_to_dto(courier: Courier) -> CourierDTO:
-    # Создаем DTO без storage_places (они загрузятся через cascade)
     return CourierDTO(
         id=courier.id,
         name=courier.name,
         speed=courier.speed,
         location_x=courier.location.x,
         location_y=courier.location.y,
-        storage_places=[],
+        storage_places=[
+            storage_place_domain_to_dto(sp, courier.id)
+            for sp in courier.storage_places
+        ],
     )
 
 

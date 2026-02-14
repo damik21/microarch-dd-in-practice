@@ -42,7 +42,13 @@ async def assign_orders() -> None:
             dispatcher=OrderDispatcher(),
             tracker=tracker,
         )
-        await handler.handle()
+        result = await handler.handle()
+        if result:
+            logger.info(
+                "Order %s assigned to courier %s",
+                result.order_id,
+                result.courier_id,
+            )
 
 
 async def move_couriers() -> None:
@@ -53,4 +59,19 @@ async def move_couriers() -> None:
             courier_repository=CourierRepository(tracker),
             tracker=tracker,
         )
-        await handler.handle()
+        results = await handler.handle()
+        for r in results:
+            if r.order_completed:
+                logger.info(
+                    "Courier '%s' (%s) completed delivery at %s",
+                    r.courier_name,
+                    r.courier_id,
+                    r.new_location,
+                )
+            else:
+                logger.info(
+                    "Courier '%s' (%s) moved to %s",
+                    r.courier_name,
+                    r.courier_id,
+                    r.new_location,
+                )

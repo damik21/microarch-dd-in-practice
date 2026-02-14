@@ -17,7 +17,7 @@ def upgrade() -> None:
         "ASSIGNED",
         "COMPLETED",
         name="order_status",
-        create_type=True,
+        create_type=False,
     )
     order_status_enum.create(op.get_bind())
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from core.domain.model.courier.courier import Courier
 from core.domain.model.kernel.location import Location
@@ -26,7 +27,7 @@ class CreateCourierHandler:
         self._courier_repository = courier_repository
         self._tracker = tracker
 
-    async def handle(self, command: CreateCourierCommand) -> None:
+    async def handle(self, command: CreateCourierCommand) -> UUID:
         courier = Courier.create(
             name=command.name,
             speed=command.speed,
@@ -34,3 +35,4 @@ class CreateCourierHandler:
         )
         async with self._tracker.transaction():
             await self._courier_repository.add(courier)
+        return courier.id

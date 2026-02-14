@@ -19,5 +19,5 @@ class GetCouriersHandler:
         self._courier_repository = courier_repository
 
     async def handle(self) -> list[CourierDTO]:
-        couriers = await self._courier_repository.get_all_busy()
+        couriers = await self._courier_repository.get_all()
         return [CourierDTO(id=c.id, name=c.name, location=c.location) for c in couriers]

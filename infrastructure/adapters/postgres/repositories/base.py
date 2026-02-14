@@ -30,8 +30,11 @@ class RepositoryTracker(Tracker):
     async def begin(self) -> None:
         """Начать транзакцию."""
         if not self._in_transaction:
-            await self._session.begin()
-            self._in_transaction = True
+            if self._session.in_transaction():
+                self._in_transaction = True
+            else:
+                await self._session.begin()
+                self._in_transaction = True
 
     async def commit(self) -> None:
         """Зафиксировать транзакцию."""

@@ -1,5 +1,3 @@
-from collections.abc import AsyncGenerator
-
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,16 +18,11 @@ from infrastructure.adapters.postgres.repositories.order_repository import (
     OrderRepository,
 )
 from infrastructure.adapters.postgres.repositories.tracker import Tracker
-from infrastructure.db import async_session_maker
+from infrastructure.db import get_session
 
 
 def get_order_dispatcher() -> OrderDispatcherInterface:
     return OrderDispatcher()
-
-
-async def get_session() -> AsyncGenerator[AsyncSession]:
-    async with async_session_maker() as session:
-        yield session
 
 
 async def get_tracker(session: AsyncSession = Depends(get_session)) -> Tracker:

@@ -5,11 +5,12 @@ import pytest
 
 from core.domain.model.courier.courier import Courier
 from core.domain.model.kernel.location import Location
-from infrastructure.adapters.postgres.repositories.courier_repository import CourierRepository
+from infrastructure.adapters.postgres.repositories.courier_repository import (
+    CourierRepository,
+)
 
 
 class TestCourierRepository:
-
     @pytest.mark.asyncio
     async def test_add_courier(self, tracker: Any) -> None:
         """Тест добавления курьера в БД."""
@@ -22,8 +23,9 @@ class TestCourierRepository:
         await repository.add(courier)
 
         # Assert - получаем курьера напрямую из БД
-        from infrastructure.adapters.postgres.models.courier import CourierDTO
         from sqlalchemy import select
+
+        from infrastructure.adapters.postgres.models.courier import CourierDTO
 
         session = tracker.db()
         stmt = select(CourierDTO).where(CourierDTO.id == courier.id)
@@ -51,15 +53,16 @@ class TestCourierRepository:
         await repository.add(courier)
 
         # Assert - проверяем, что storage_places созданы через cascade
-        from infrastructure.adapters.postgres.models.storage_place import StoragePlaceDTO
         from sqlalchemy import select
 
-        session = tracker.db()
-        stmt = select(StoragePlaceDTO).where(
-            StoragePlaceDTO.courier_id == courier.id
+        from infrastructure.adapters.postgres.models.storage_place import (
+            StoragePlaceDTO,
         )
+
+        session = tracker.db()
+        stmt = select(StoragePlaceDTO).where(StoragePlaceDTO.courier_id == courier.id)
         result = await session.execute(stmt)
-        storage_places = result.scalars().all()
+        result.scalars().all()
 
         # SQLAlchemy cascade не сработает при обычном add,
         # т.к. мы не добавляем storage_places в DTO
@@ -76,7 +79,9 @@ class TestCourierRepository:
         await repository.add(courier)
 
         # Добавляем storage_place вручную для теста
-        from infrastructure.adapters.postgres.models.storage_place import StoragePlaceDTO
+        from infrastructure.adapters.postgres.models.storage_place import (
+            StoragePlaceDTO,
+        )
 
         session = tracker.db()
         storage = StoragePlaceDTO(
@@ -133,7 +138,9 @@ class TestCourierRepository:
 
         # Note: без storage_places get_by_id вернёт None, т.к. нечего загружать
         # Для этого теста добавим storage_place
-        from infrastructure.adapters.postgres.models.storage_place import StoragePlaceDTO
+        from infrastructure.adapters.postgres.models.storage_place import (
+            StoragePlaceDTO,
+        )
 
         session = tracker.db()
         storage = StoragePlaceDTO(
@@ -155,10 +162,14 @@ class TestCourierRepository:
         # Arrange
         repository = CourierRepository(tracker)
 
-        courier1 = Courier.create(name="Свободный", speed=2, location=Location(x=1, y=1))
+        courier1 = Courier.create(
+            name="Свободный", speed=2, location=Location(x=1, y=1)
+        )
         await repository.add(courier1)
 
-        from infrastructure.adapters.postgres.models.storage_place import StoragePlaceDTO
+        from infrastructure.adapters.postgres.models.storage_place import (
+            StoragePlaceDTO,
+        )
 
         session = tracker.db()
         storage1 = StoragePlaceDTO(
@@ -187,8 +198,11 @@ class TestCourierRepository:
         courier = Courier.create(name="Занятый", speed=2, location=Location(x=1, y=1))
         await repository.add(courier)
 
-        from infrastructure.adapters.postgres.models.storage_place import StoragePlaceDTO
         from uuid import uuid4
+
+        from infrastructure.adapters.postgres.models.storage_place import (
+            StoragePlaceDTO,
+        )
 
         session = tracker.db()
         storage = StoragePlaceDTO(
@@ -216,7 +230,9 @@ class TestCourierRepository:
         repository = CourierRepository(tracker)
 
         # Свободный курьер
-        courier1 = Courier.create(name="Свободный", speed=2, location=Location(x=1, y=1))
+        courier1 = Courier.create(
+            name="Свободный", speed=2, location=Location(x=1, y=1)
+        )
         await repository.add(courier1)
 
         # Занятый курьер 1
@@ -227,7 +243,9 @@ class TestCourierRepository:
         courier3 = Courier.create(name="Занятый2", speed=4, location=Location(x=3, y=3))
         await repository.add(courier3)
 
-        from infrastructure.adapters.postgres.models.storage_place import StoragePlaceDTO
+        from infrastructure.adapters.postgres.models.storage_place import (
+            StoragePlaceDTO,
+        )
 
         session = tracker.db()
         order_id = uuid4()
@@ -297,8 +315,9 @@ class TestCourierRepository:
             await repository.add(courier)
 
         # Assert
-        from infrastructure.adapters.postgres.models.courier import CourierDTO
         from sqlalchemy import select
+
+        from infrastructure.adapters.postgres.models.courier import CourierDTO
 
         session = tracker.db()
         stmt = select(CourierDTO)
@@ -322,7 +341,9 @@ class TestCourierRepository:
         await repository.add(courier2)
 
         # Добавляем storage_places для обоих курьеров
-        from infrastructure.adapters.postgres.models.storage_place import StoragePlaceDTO
+        from infrastructure.adapters.postgres.models.storage_place import (
+            StoragePlaceDTO,
+        )
 
         session = tracker.db()
         session.add(

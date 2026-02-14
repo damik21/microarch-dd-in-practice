@@ -9,9 +9,7 @@ class OrderDispatcher(OrderDispatcherInterface):
     def dispatch(self, order: Order, couriers: list[Courier]) -> Courier | None:
         # Фильтруем курьеров, которые могут взять заказ
         eligible_couriers = [
-            courier
-            for courier in couriers
-            if courier.can_take_order(order.volume)
+            courier for courier in couriers if courier.can_take_order(order.volume)
         ]
 
         if not eligible_couriers:

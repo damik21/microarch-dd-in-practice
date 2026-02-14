@@ -1,8 +1,6 @@
 from uuid import uuid4
 
-import pytest
-
-from core.domain.model.courier.courier import Courier, DEFAULT_BAG_VOLUME
+from core.domain.model.courier.courier import DEFAULT_BAG_VOLUME, Courier
 from core.domain.model.kernel.location import Location
 from core.domain.model.order.order import Order, OrderStatus
 from core.domain.services.order_dispatcher import OrderDispatcher

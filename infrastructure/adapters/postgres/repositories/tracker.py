@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
-from sqlalchemy import ScalarResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -32,3 +33,13 @@ class Tracker(ABC):
     @abstractmethod
     async def rollback(self) -> None:
         raise NotImplementedError
+
+    @asynccontextmanager
+    async def transaction(self) -> AsyncIterator[None]:
+        await self.begin()
+        try:
+            yield
+            await self.commit()
+        except Exception:
+            await self.rollback()
+            raise

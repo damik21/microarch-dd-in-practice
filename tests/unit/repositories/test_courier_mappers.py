@@ -1,7 +1,6 @@
 import uuid
 
 from core.domain.model.courier.courier import Courier
-from core.domain.model.courier.storage_place import StoragePlace
 from core.domain.model.kernel.location import Location
 from infrastructure.adapters.postgres.models.courier import CourierDTO
 from infrastructure.adapters.postgres.models.storage_place import StoragePlaceDTO

@@ -2,6 +2,12 @@ from uuid import uuid4
 
 import pytest
 
+from core.domain.exceptions.order import (
+    OrderAlreadyAssigned,
+    OrderCannotBeAssigned,
+    OrderCannotBeCompleted,
+    OrderVolumeIncorrect,
+)
 from core.domain.model.kernel.location import Location
 from core.domain.model.order.order import Order, OrderStatus
 
@@ -23,7 +29,7 @@ class TestOrder:
         location = Location(x=1, y=1)
 
         with pytest.raises(
-            ValueError,
+            OrderVolumeIncorrect,
             match="Объём заказа должен быть больше 0.",
         ):
             Order.create(id=uuid4(), location=location, volume=0)
@@ -47,7 +53,7 @@ class TestOrder:
         order.assign(courier_id=courier_id)
 
         with pytest.raises(
-            ValueError,
+            OrderAlreadyAssigned,
             match="Заказ уже назначен на курьера.",
         ):
             order.assign(courier_id=uuid4())
@@ -59,7 +65,7 @@ class TestOrder:
         order.complete()
 
         with pytest.raises(
-            ValueError,
+            OrderCannotBeAssigned,
             match="Нельзя назначить завершённый заказ.",
         ):
             order.assign(courier_id=uuid4())
@@ -77,7 +83,7 @@ class TestOrder:
         order = Order.create(id=uuid4(), location=Location(x=1, y=1), volume=5)
 
         with pytest.raises(
-            ValueError,
+            OrderCannotBeCompleted,
             match="Завершить можно только назначенный заказ.",
         ):
             order.complete()

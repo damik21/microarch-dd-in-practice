@@ -1,11 +1,13 @@
 from typing import Any
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
 from core.domain.model.kernel.location import Location
 from core.domain.model.order.order import Order, OrderStatus
-from infrastructure.adapters.postgres.repositories.order_repository import OrderRepository
+from infrastructure.adapters.postgres.repositories.order_repository import (
+    OrderRepository,
+)
 
 
 class TestOrderRepository:
@@ -18,8 +20,9 @@ class TestOrderRepository:
 
         await repository.add(order)
 
-        from infrastructure.adapters.postgres.models.order import OrderDTO
         from sqlalchemy import select
+
+        from infrastructure.adapters.postgres.models.order import OrderDTO
 
         session = tracker.db()
         stmt = select(OrderDTO).where(OrderDTO.id == order.id)
@@ -58,7 +61,9 @@ class TestOrderRepository:
     @pytest.mark.asyncio
     async def test_update_order_status(self, tracker: Any) -> None:
         from core.domain.model.courier.courier import Courier
-        from infrastructure.adapters.postgres.repositories.courier_repository import CourierRepository
+        from infrastructure.adapters.postgres.repositories.courier_repository import (
+            CourierRepository,
+        )
 
         courier_repo = CourierRepository(tracker)
         order_repo = OrderRepository(tracker)
@@ -103,7 +108,9 @@ class TestOrderRepository:
     @pytest.mark.asyncio
     async def test_get_all_assigned(self, tracker: Any) -> None:
         from core.domain.model.courier.courier import Courier
-        from infrastructure.adapters.postgres.repositories.courier_repository import CourierRepository
+        from infrastructure.adapters.postgres.repositories.courier_repository import (
+            CourierRepository,
+        )
 
         courier_repo = CourierRepository(tracker)
         order_repo = OrderRepository(tracker)
@@ -136,7 +143,9 @@ class TestOrderRepository:
     @pytest.mark.asyncio
     async def test_complete_order(self, tracker: Any) -> None:
         from core.domain.model.courier.courier import Courier
-        from infrastructure.adapters.postgres.repositories.courier_repository import CourierRepository
+        from infrastructure.adapters.postgres.repositories.courier_repository import (
+            CourierRepository,
+        )
 
         courier_repo = CourierRepository(tracker)
         order_repo = OrderRepository(tracker)
@@ -168,8 +177,9 @@ class TestOrderRepository:
         for order in orders:
             await repository.add(order)
 
-        from infrastructure.adapters.postgres.models.order import OrderDTO
         from sqlalchemy import select
+
+        from infrastructure.adapters.postgres.models.order import OrderDTO
 
         session = tracker.db()
         stmt = select(OrderDTO)

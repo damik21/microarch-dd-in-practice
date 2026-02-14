@@ -30,3 +30,7 @@ class OrderRepositoryInterface(ABC):
     @abstractmethod
     async def get_all_assigned(self) -> list["Order"]:
         raise NotImplementedError
+
+    @abstractmethod
+    async def get_all_not_completed(self) -> list["Order"]:
+        raise NotImplementedError

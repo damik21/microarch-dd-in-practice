@@ -1,6 +1,8 @@
 import random
 from dataclasses import dataclass
 
+from core.domain.exceptions.location import LocationCoordinateIncorrect
+
 MIN_COORDINATE: int = 1
 MAX_COORDINATE: int = 10
 
@@ -13,9 +15,13 @@ class Location:
     # MagicMethod для валидации после инициализации объекта
     def __post_init__(self) -> None:
         if self.x < MIN_COORDINATE or self.x > MAX_COORDINATE:
-            raise ValueError(f"Координата x имеет некорректное значение {self.x}")
+            raise LocationCoordinateIncorrect(
+                f"Координата x имеет некорректное значение {self.x}"
+            )
         if self.y < MIN_COORDINATE or self.y > MAX_COORDINATE:
-            raise ValueError(f"Координата y имеет некорректное значение {self.y}")
+            raise LocationCoordinateIncorrect(
+                f"Координата y имеет некорректное значение {self.y}"
+            )
 
     # Так как используем @dataclass(frozen=True), то сеттеры и эквивалентность уже работают из коробки.
     # Если бы делали руками, то можно было бы реализовать следующим образом

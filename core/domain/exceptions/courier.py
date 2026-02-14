@@ -12,3 +12,7 @@ class CourierNameIncorrect(BaseException):
 
 class CourierSpeedIncorrect(BaseException):
     pass
+
+
+class CourierNotFound(BaseException):
+    pass

@@ -2,6 +2,7 @@ from dataclasses import FrozenInstanceError
 
 import pytest
 
+from core.domain.exceptions.location import LocationCoordinateIncorrect
 from core.domain.model.kernel.location import (
     MAX_COORDINATE,
     MIN_COORDINATE,
@@ -20,7 +21,7 @@ class TestLocation:
     def test_create_with_invalid_coordinates_failed(
         self, x: int, y: int, expected_error_msg: str
     ) -> None:
-        with pytest.raises(ValueError, match=expected_error_msg):
+        with pytest.raises(LocationCoordinateIncorrect, match=expected_error_msg):
             Location(x=x, y=y)
 
     @pytest.mark.parametrize(

@@ -12,7 +12,6 @@ from sqlalchemy.ext.asyncio import (
 from config.config import settings
 from infrastructure.adapters.postgres.models.base import Base
 
-
 # Тестовый движок с отдельной базой данных
 TEST_DATABASE_URL = settings.database_url.replace(
     f"/{settings.db_name}",
@@ -62,7 +61,9 @@ async def _clean_tables() -> None:
         # Отключаем проверки внешних ключей
         await conn.execute(text("SET session_replication_role = 'replica'"))
         # Очищаем все таблицы в правильном порядке
-        await conn.execute(text("TRUNCATE TABLE orders, storage_places, couriers CASCADE"))
+        await conn.execute(
+            text("TRUNCATE TABLE orders, storage_places, couriers CASCADE")
+        )
         # Включаем проверки обратно
         await conn.execute(text("SET session_replication_role = 'origin'"))
 
@@ -99,8 +100,9 @@ def tracker(db_session: AsyncSession) -> Any:
 @pytest.fixture
 def mock_tracker() -> Any:
     """Создать мок Tracker для тестов без БД."""
-    from infrastructure.adapters.postgres.repositories.base import RepositoryTracker
     from unittest.mock import AsyncMock, MagicMock
+
+    from infrastructure.adapters.postgres.repositories.base import RepositoryTracker
 
     # Создаём мок сессии
     mock_session = MagicMock(spec=AsyncSession)

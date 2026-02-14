@@ -35,7 +35,7 @@ class StoragePlaceDTO(Base):  # type: ignore[misc]
         default=None,
     )
 
-    courier: Mapped["CourierDTO"] = relationship(
+    courier: Mapped[CourierDTO] = relationship(
         "CourierDTO",
         back_populates="storage_places",
     )

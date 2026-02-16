@@ -76,6 +76,11 @@ class Courier:
         return self.__name
 
     @property
+    def storage_places(self) -> list[StoragePlace]:
+        """Получить места хранения курьера."""
+        return list(self.__storage_places)
+
+    @property
     def speed(self) -> int:
         """Получить скорость курьера."""
         return self.__speed

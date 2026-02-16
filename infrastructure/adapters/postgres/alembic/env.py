@@ -5,13 +5,12 @@ from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import pool
-
-from infrastructure.adapters.postgres.models.base import Base
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 # Импортируем настройки и модели
 from config.config import settings
+from infrastructure.adapters.postgres.models.base import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

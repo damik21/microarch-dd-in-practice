@@ -1,8 +1,14 @@
 from __future__ import annotations
 
 from enum import Enum
-from uuid import UUID, uuid4
+from uuid import UUID
 
+from core.domain.exceptions.order import (
+    OrderAlreadyAssigned,
+    OrderCannotBeAssigned,
+    OrderCannotBeCompleted,
+    OrderVolumeIncorrect,
+)
 from core.domain.model.kernel.location import Location
 
 
@@ -27,7 +33,7 @@ class Order:
         volume: int,
     ) -> Order:
         if volume <= 0:
-            raise ValueError("Объём заказа должен быть больше 0.")
+            raise OrderVolumeIncorrect("Объём заказа должен быть больше 0.")
         return cls._new(
             id=id,
             location=location,
@@ -85,16 +91,15 @@ class Order:
 
     def assign(self, courier_id: UUID) -> None:
         if self.__status is OrderStatus.ASSIGNED:
-            raise ValueError("Заказ уже назначен на курьера.")
+            raise OrderAlreadyAssigned("Заказ уже назначен на курьера.")
         if self.__status is OrderStatus.COMPLETED:
-            raise ValueError("Нельзя назначить завершённый заказ.")
+            raise OrderCannotBeAssigned("Нельзя назначить завершённый заказ.")
 
         self.__courier_id = courier_id
         self.__status = OrderStatus.ASSIGNED
 
     def complete(self) -> None:
         if self.__status is not OrderStatus.ASSIGNED:
-            raise ValueError("Завершить можно только назначенный заказ.")
+            raise OrderCannotBeCompleted("Завершить можно только назначенный заказ.")
 
         self.__status = OrderStatus.COMPLETED
-

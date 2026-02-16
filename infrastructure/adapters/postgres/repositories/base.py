@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Any
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from infrastructure.adapters.postgres.repositories.tracker import Tracker
@@ -32,8 +30,11 @@ class RepositoryTracker(Tracker):
     async def begin(self) -> None:
         """Начать транзакцию."""
         if not self._in_transaction:
-            await self._session.begin()
-            self._in_transaction = True
+            if self._session.in_transaction():
+                self._in_transaction = True
+            else:
+                await self._session.begin()
+                self._in_transaction = True
 
     async def commit(self) -> None:
         """Зафиксировать транзакцию."""

@@ -23,5 +23,9 @@ class CourierRepositoryInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def get_all_busy(self) -> list["Courier"]:
+    async def get_all(self) -> list["Courier"]:
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_all_free(self) -> list["Courier"]:
         raise NotImplementedError

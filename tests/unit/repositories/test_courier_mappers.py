@@ -1,7 +1,6 @@
 import uuid
 
 from core.domain.model.courier.courier import Courier
-from core.domain.model.courier.storage_place import StoragePlace
 from core.domain.model.kernel.location import Location
 from infrastructure.adapters.postgres.models.courier import CourierDTO
 from infrastructure.adapters.postgres.models.storage_place import StoragePlaceDTO
@@ -30,7 +29,10 @@ class TestCourierMappers:
         assert dto.speed == 2
         assert dto.location_x == 1
         assert dto.location_y == 1
-        assert dto.storage_places == []  # Пустой список
+        assert len(dto.storage_places) == 1
+        assert dto.storage_places[0].name == "Сумка"
+        assert dto.storage_places[0].total_volume == 10
+        assert dto.storage_places[0].order_id is None
 
     def test_dto_to_domain_free_courier(self) -> None:
         """Тест преобразования DTO в доменную модель (свободный курьер)."""

@@ -19,14 +19,16 @@ if TYPE_CHECKING:
 
 
 def domain_to_dto(courier: Courier) -> CourierDTO:
-    # Создаем DTO без storage_places (они загрузятся через cascade)
     return CourierDTO(
         id=courier.id,
         name=courier.name,
         speed=courier.speed,
         location_x=courier.location.x,
         location_y=courier.location.y,
-        storage_places=[],
+        storage_places=[
+            storage_place_domain_to_dto(sp, courier.id)
+            for sp in courier.storage_places
+        ],
     )
 
 
@@ -159,26 +161,16 @@ class CourierRepository(CourierRepositoryInterface):
 
         return None
 
-    async def get_all_busy(self) -> list[Courier]:
+    async def get_all(self) -> list[Courier]:
         session = self._get_tx_or_db()
-
-        # Ищем курьеров, у которых хотя бы один storage_place имеет order_id != None
         stmt = (
             select(CourierDTO)
-            .options(selectinload(CourierDTO.storage_places))
             .order_by(CourierDTO.id)
         )
         result = await session.execute(stmt)
         dtos = result.scalars().all()
 
-        # Фильтруем занятых курьеров
-        busy_couriers = []
-        for dto in dtos:
-            # Курьер занят, если у него есть хотя бы один order_id в storage_places
-            if any(sp.order_id is not None for sp in dto.storage_places):
-                busy_couriers.append(dto_to_domain(dto))
-
-        return busy_couriers
+        return [dto_to_domain(dto) for dto in dtos]
 
     async def get_all_free(self) -> list[Courier]:
         session = self._get_tx_or_db()

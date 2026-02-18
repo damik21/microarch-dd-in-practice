@@ -42,9 +42,9 @@ class StoragePlace:
     ) -> StoragePlace:
         instance = object.__new__(cls)
         instance.id = uuid4()
-        instance._StoragePlace__name = name
-        instance._StoragePlace__total_volume = total_volume
-        instance._StoragePlace__order_id = order_id
+        instance.__name = name
+        instance.__total_volume = total_volume
+        instance.__order_id = order_id
         return instance
 
     def __init__(

@@ -55,10 +55,10 @@ class Courier:
     ) -> Courier:
         instance = object.__new__(cls)
         instance.id = uuid4()
-        instance._Courier__name = name
-        instance._Courier__speed = speed
-        instance._Courier__location = location
-        instance._Courier__storage_places = list(storage_places)
+        instance.__name = name
+        instance.__speed = speed
+        instance.__location = location
+        instance.__storage_places = list(storage_places)
         return instance
 
     def __init__(

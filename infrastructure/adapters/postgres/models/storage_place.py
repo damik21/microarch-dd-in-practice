@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from infrastructure.adapters.postgres.models.courier import CourierDTO
 
 
-class StoragePlaceDTO(Base):  # type: ignore[misc]
+class StoragePlaceDTO(Base):
     __tablename__ = "storage_places"
 
     id: Mapped[uuid.UUID] = mapped_column(

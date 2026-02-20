@@ -39,6 +39,10 @@ packages = ["api", "config", "core", "infrastructure"]
 [tool.ruff]
 line-length = 88
 target-version = "py313"
+extend-exclude = [
+    "infrastructure/adapters/grpc/geo_pb2.py",
+    "infrastructure/adapters/grpc/geo_pb2_grpc.py",
+]
 lint.select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
@@ -79,8 +83,17 @@ exclude = ["^tests/"]
 module = [
     "testcontainers.*",
     "dotenv.*",
+    "grpc",
+    "grpc.*",
 ]
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "infrastructure.adapters.grpc.geo_pb2",
+    "infrastructure.adapters.grpc.geo_pb2_grpc",
+]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

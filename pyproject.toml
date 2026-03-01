@@ -42,6 +42,7 @@ target-version = "py313"
 extend-exclude = [
     "infrastructure/adapters/grpc/geo_pb2.py",
     "infrastructure/adapters/grpc/geo_pb2_grpc.py",
+    "infrastructure/adapters/kafka/basket_events_pb2.py",
 ]
 lint.select = [
     "E",  # pycodestyle errors
@@ -92,6 +93,7 @@ ignore_missing_imports = true
 module = [
     "infrastructure.adapters.grpc.geo_pb2",
     "infrastructure.adapters.grpc.geo_pb2_grpc",
+    "infrastructure.adapters.kafka.basket_events_pb2",
 ]
 ignore_errors = true
 

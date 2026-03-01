@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.adapters.http.router import router as v1_router
+from api.adapters.kafka.consumers import build_consumers
 from api.tasks import assign_orders, move_couriers, run_periodic
 from config.config import settings
 
@@ -27,10 +28,18 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         run_periodic(move_couriers, interval=1, name="move_couriers")
     )
     logger.info("Periodic tasks started (assign_orders, move_couriers)")
+
+    consumers = build_consumers(settings)
+    for consumer in consumers:
+        await consumer.start()
+
     yield
+
     logger.info("Stopping periodic tasks...")
     assign_task.cancel()
     move_task.cancel()
+    for consumer in consumers:
+        await consumer.stop()
 
 
 app = FastAPI(

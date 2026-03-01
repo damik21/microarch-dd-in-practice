@@ -11,9 +11,7 @@ from api.tasks import assign_orders, move_couriers, run_periodic
 class TestRunPeriodic:
     async def test_calls_task_multiple_times(self) -> None:
         task = AsyncMock()
-        periodic = asyncio.create_task(
-            run_periodic(task, interval=0, name="test")
-        )
+        periodic = asyncio.create_task(run_periodic(task, interval=0, name="test"))
         await asyncio.sleep(0.05)
         periodic.cancel()
 
@@ -38,9 +36,7 @@ class TestRunPeriodic:
 
     async def test_stops_on_cancel(self) -> None:
         task = AsyncMock()
-        periodic = asyncio.create_task(
-            run_periodic(task, interval=10, name="test")
-        )
+        periodic = asyncio.create_task(run_periodic(task, interval=10, name="test"))
         await asyncio.sleep(0.01)
         periodic.cancel()
 
@@ -151,6 +147,8 @@ class TestMoveCouriers:
             patch("api.tasks.RepositoryTracker") as MockTracker,
             patch("api.tasks.OrderRepository") as MockOrderRepo,
             patch("api.tasks.CourierRepository") as MockCourierRepo,
+            patch("api.tasks.OrderEventsHandler") as MockOrderEventsHandler,
+            patch("api.tasks.KafkaOrderEventsProducer") as MockProducer,
         ):
             MockHandler.return_value = AsyncMock()
 
@@ -160,8 +158,12 @@ class TestMoveCouriers:
             tracker = MockTracker.return_value
             MockOrderRepo.assert_called_once_with(tracker)
             MockCourierRepo.assert_called_once_with(tracker)
+            MockOrderEventsHandler.assert_called_once_with(
+                publisher=MockProducer.return_value
+            )
             MockHandler.assert_called_once_with(
                 order_repository=MockOrderRepo.return_value,
                 courier_repository=MockCourierRepo.return_value,
                 tracker=tracker,
+                order_events_handler=MockOrderEventsHandler.return_value,
             )

@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from core.domain.model.kernel.location import Location
 from core.domain.model.order.order import Order
+from core.ports.geo_service_client import GeoServiceClientInterface
+from core.ports.order_events_dispatcher import OrderEventsDispatcherInterface
 from core.ports.order_repository import OrderRepositoryInterface
 
 if TYPE_CHECKING:
@@ -24,15 +25,23 @@ class CreateOrderHandler:
         self,
         order_repository: OrderRepositoryInterface,
         tracker: Tracker,
+        geo_service_client: GeoServiceClientInterface,
+        order_events_handler: OrderEventsDispatcherInterface,
     ) -> None:
         self._order_repository = order_repository
         self._tracker = tracker
+        self._geo_service_client = geo_service_client
+        self._order_events_handler = order_events_handler
 
     async def handle(self, command: CreateOrderCommand) -> None:
+        location = await self._geo_service_client.get_location(command.street)
         order = Order.create(
             id=command.order_id,
-            location=Location.new_random_location(),
+            location=location,
             volume=command.volume,
         )
         async with self._tracker.transaction():
             await self._order_repository.add(order)
+
+        for event in order.pull_events():
+            await self._order_events_handler.handle(event)

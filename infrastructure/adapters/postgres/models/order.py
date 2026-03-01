@@ -8,7 +8,7 @@ from core.domain.model.order.order import OrderStatus
 from infrastructure.adapters.postgres.models.base import Base
 
 
-class OrderDTO(Base):  # type: ignore[misc]
+class OrderDTO(Base):
     __tablename__ = "orders"
 
     id: Mapped[uuid.UUID] = mapped_column(

@@ -1,6 +1,8 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from config.config import settings
+from core.application.event_handlers.order_events import OrderEventsHandler
 from core.application.use_cases.commands.add_storage_place import AddStoragePlaceHandler
 from core.application.use_cases.commands.assign_order import AssignOrderHandler
 from core.application.use_cases.commands.create_courier import CreateCourierHandler
@@ -9,7 +11,11 @@ from core.application.use_cases.commands.move_couriers import MoveCouriersHandle
 from core.application.use_cases.queries.get_active_orders import GetActiveOrdersHandler
 from core.application.use_cases.queries.get_couriers import GetCouriersHandler
 from core.domain.services import OrderDispatcher
-from core.ports import OrderDispatcherInterface
+from core.ports import GeoServiceClientInterface, OrderDispatcherInterface
+from core.ports.order_events_dispatcher import OrderEventsDispatcherInterface
+from core.ports.order_events_publisher import OrderEventsPublisherInterface
+from infrastructure.adapters.grpc.geo_service_client import GeoServiceClient
+from infrastructure.adapters.kafka.order_events_producer import KafkaOrderEventsProducer
 from infrastructure.adapters.postgres.repositories.base import RepositoryTracker
 from infrastructure.adapters.postgres.repositories.courier_repository import (
     CourierRepository,
@@ -25,15 +31,39 @@ def get_order_dispatcher() -> OrderDispatcherInterface:
     return OrderDispatcher()
 
 
+def get_geo_service_client() -> GeoServiceClientInterface:
+    return GeoServiceClient(settings.geo_service_grpc_host)
+
+
+def get_order_events_publisher() -> OrderEventsPublisherInterface:
+    return KafkaOrderEventsProducer(
+        kafka_host=settings.kafka_host,
+        topic=settings.kafka_order_changed_topic,
+    )
+
+
+def get_order_events_handler(
+    publisher: OrderEventsPublisherInterface = Depends(get_order_events_publisher),
+) -> OrderEventsDispatcherInterface:
+    return OrderEventsHandler(publisher=publisher)
+
+
 async def get_tracker(session: AsyncSession = Depends(get_session)) -> Tracker:
     return RepositoryTracker(session)
 
 
 async def get_create_order_handler(
     tracker: Tracker = Depends(get_tracker),
+    geo_client: GeoServiceClientInterface = Depends(get_geo_service_client),
+    order_events_handler: OrderEventsDispatcherInterface = Depends(
+        get_order_events_handler
+    ),
 ) -> CreateOrderHandler:
     return CreateOrderHandler(
-        order_repository=OrderRepository(tracker), tracker=tracker
+        order_repository=OrderRepository(tracker),
+        tracker=tracker,
+        geo_service_client=geo_client,
+        order_events_handler=order_events_handler,
     )
 
 
@@ -67,11 +97,15 @@ async def get_assign_order_handler(
 
 async def get_move_couriers_handler(
     tracker: Tracker = Depends(get_tracker),
+    order_events_handler: OrderEventsDispatcherInterface = Depends(
+        get_order_events_handler
+    ),
 ) -> MoveCouriersHandler:
     return MoveCouriersHandler(
         order_repository=OrderRepository(tracker),
         courier_repository=CourierRepository(tracker),
         tracker=tracker,
+        order_events_handler=order_events_handler,
     )
 
 

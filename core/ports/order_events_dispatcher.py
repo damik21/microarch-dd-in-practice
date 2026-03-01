@@ -2,16 +2,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from core.domain.events.order import (
-    OrderCompletedDomainEvent,
-    OrderCreatedDomainEvent,
-)
+from core.domain.events.order import OrderDomainEvent
 
 
 class OrderEventsDispatcherInterface(ABC):
     @abstractmethod
     async def handle(
         self,
-        event: OrderCreatedDomainEvent | OrderCompletedDomainEvent,
+        event: OrderDomainEvent,
     ) -> None:
         raise NotImplementedError

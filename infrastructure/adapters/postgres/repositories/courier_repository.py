@@ -26,8 +26,7 @@ def domain_to_dto(courier: Courier) -> CourierDTO:
         location_x=courier.location.x,
         location_y=courier.location.y,
         storage_places=[
-            storage_place_domain_to_dto(sp, courier.id)
-            for sp in courier.storage_places
+            storage_place_domain_to_dto(sp, courier.id) for sp in courier.storage_places
         ],
     )
 
@@ -163,10 +162,7 @@ class CourierRepository(CourierRepositoryInterface):
 
     async def get_all(self) -> list[Courier]:
         session = self._get_tx_or_db()
-        stmt = (
-            select(CourierDTO)
-            .order_by(CourierDTO.id)
-        )
+        stmt = select(CourierDTO).order_by(CourierDTO.id)
         result = await session.execute(stmt)
         dtos = result.scalars().all()
 

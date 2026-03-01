@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
 import pytest
 
-from api.tasks import assign_orders, move_couriers, run_periodic
+from api.tasks import assign_orders, move_couriers, process_outbox_events, run_periodic
+from core.domain.events.order import OrderCreatedDomainEvent
+from core.ports.outbox_repository import OutboxMessage
 
 
 class TestRunPeriodic:
@@ -147,8 +151,7 @@ class TestMoveCouriers:
             patch("api.tasks.RepositoryTracker") as MockTracker,
             patch("api.tasks.OrderRepository") as MockOrderRepo,
             patch("api.tasks.CourierRepository") as MockCourierRepo,
-            patch("api.tasks.OrderEventsHandler") as MockOrderEventsHandler,
-            patch("api.tasks.KafkaOrderEventsProducer") as MockProducer,
+            patch("api.tasks.OutboxRepository") as MockOutboxRepository,
         ):
             MockHandler.return_value = AsyncMock()
 
@@ -158,12 +161,51 @@ class TestMoveCouriers:
             tracker = MockTracker.return_value
             MockOrderRepo.assert_called_once_with(tracker)
             MockCourierRepo.assert_called_once_with(tracker)
-            MockOrderEventsHandler.assert_called_once_with(
-                publisher=MockProducer.return_value
-            )
+            MockOutboxRepository.assert_called_once_with(tracker)
             MockHandler.assert_called_once_with(
                 order_repository=MockOrderRepo.return_value,
                 courier_repository=MockCourierRepo.return_value,
                 tracker=tracker,
-                order_events_handler=MockOrderEventsHandler.return_value,
+                outbox_repository=MockOutboxRepository.return_value,
             )
+
+
+class TestProcessOutboxEvents:
+    async def test_dispatches_and_marks_processed(self) -> None:
+        mock_session = AsyncMock()
+        mock_session_maker = MagicMock()
+        mock_session_maker.return_value.__aenter__ = AsyncMock(
+            return_value=mock_session
+        )
+        mock_session_maker.return_value.__aexit__ = AsyncMock(return_value=False)
+        message = OutboxMessage(
+            id=uuid4(),
+            event=OrderCreatedDomainEvent(order_id=uuid4()),
+        )
+
+        with (
+            patch("api.tasks.async_session_maker", mock_session_maker),
+            patch("api.tasks.RepositoryTracker") as MockTracker,
+            patch("api.tasks.OutboxRepository") as MockOutboxRepository,
+            patch("api.tasks.OrderEventsHandler") as MockOrderEventsHandler,
+            patch("api.tasks.KafkaOrderEventsProducer"),
+        ):
+            tracker = MockTracker.return_value
+
+            @asynccontextmanager
+            async def transaction_cm():
+                yield
+
+            tracker.transaction = transaction_cm
+            outbox_repository = MockOutboxRepository.return_value
+            outbox_repository.get_unprocessed = AsyncMock(return_value=[message])
+            outbox_repository.mark_processed = AsyncMock()
+
+            order_events_handler = MockOrderEventsHandler.return_value
+            order_events_handler.handle = AsyncMock()
+
+            await process_outbox_events()
+
+            outbox_repository.get_unprocessed.assert_called_once()
+            order_events_handler.handle.assert_awaited_once_with(message.event)
+            outbox_repository.mark_processed.assert_awaited_once_with(message.id)

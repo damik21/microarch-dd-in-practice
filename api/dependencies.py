@@ -14,6 +14,7 @@ from core.domain.services import OrderDispatcher
 from core.ports import GeoServiceClientInterface, OrderDispatcherInterface
 from core.ports.order_events_dispatcher import OrderEventsDispatcherInterface
 from core.ports.order_events_publisher import OrderEventsPublisherInterface
+from core.ports.outbox_repository import OutboxRepositoryInterface
 from infrastructure.adapters.grpc.geo_service_client import GeoServiceClient
 from infrastructure.adapters.kafka.order_events_producer import KafkaOrderEventsProducer
 from infrastructure.adapters.postgres.repositories.base import RepositoryTracker
@@ -22,6 +23,9 @@ from infrastructure.adapters.postgres.repositories.courier_repository import (
 )
 from infrastructure.adapters.postgres.repositories.order_repository import (
     OrderRepository,
+)
+from infrastructure.adapters.postgres.repositories.outbox_repository import (
+    OutboxRepository,
 )
 from infrastructure.adapters.postgres.repositories.tracker import Tracker
 from infrastructure.db import get_session
@@ -52,18 +56,22 @@ async def get_tracker(session: AsyncSession = Depends(get_session)) -> Tracker:
     return RepositoryTracker(session)
 
 
+async def get_outbox_repository(
+    tracker: Tracker = Depends(get_tracker),
+) -> OutboxRepositoryInterface:
+    return OutboxRepository(tracker)
+
+
 async def get_create_order_handler(
     tracker: Tracker = Depends(get_tracker),
     geo_client: GeoServiceClientInterface = Depends(get_geo_service_client),
-    order_events_handler: OrderEventsDispatcherInterface = Depends(
-        get_order_events_handler
-    ),
+    outbox_repository: OutboxRepositoryInterface = Depends(get_outbox_repository),
 ) -> CreateOrderHandler:
     return CreateOrderHandler(
         order_repository=OrderRepository(tracker),
         tracker=tracker,
         geo_service_client=geo_client,
-        order_events_handler=order_events_handler,
+        outbox_repository=outbox_repository,
     )
 
 
@@ -97,15 +105,13 @@ async def get_assign_order_handler(
 
 async def get_move_couriers_handler(
     tracker: Tracker = Depends(get_tracker),
-    order_events_handler: OrderEventsDispatcherInterface = Depends(
-        get_order_events_handler
-    ),
+    outbox_repository: OutboxRepositoryInterface = Depends(get_outbox_repository),
 ) -> MoveCouriersHandler:
     return MoveCouriersHandler(
         order_repository=OrderRepository(tracker),
         courier_repository=CourierRepository(tracker),
         tracker=tracker,
-        order_events_handler=order_events_handler,
+        outbox_repository=outbox_repository,
     )
 
 

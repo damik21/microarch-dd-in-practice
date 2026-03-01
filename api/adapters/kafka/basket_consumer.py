@@ -3,8 +3,6 @@ from __future__ import annotations
 import logging
 from uuid import UUID
 
-from config.config import settings
-from core.application.event_handlers.order_events import OrderEventsHandler
 from core.application.use_cases.commands.create_order import (
     CreateOrderCommand,
     CreateOrderHandler,
@@ -12,10 +10,12 @@ from core.application.use_cases.commands.create_order import (
 from infrastructure.adapters.grpc.geo_service_client import GeoServiceClient
 from infrastructure.adapters.kafka import basket_events_pb2
 from infrastructure.adapters.kafka.base_consumer import BaseKafkaConsumer
-from infrastructure.adapters.kafka.order_events_producer import KafkaOrderEventsProducer
 from infrastructure.adapters.postgres.repositories.base import RepositoryTracker
 from infrastructure.adapters.postgres.repositories.order_repository import (
     OrderRepository,
+)
+from infrastructure.adapters.postgres.repositories.outbox_repository import (
+    OutboxRepository,
 )
 from infrastructure.db import async_session_maker
 
@@ -51,12 +51,7 @@ class BasketConfirmedConsumer(BaseKafkaConsumer):
                 order_repository=OrderRepository(tracker),
                 tracker=tracker,
                 geo_service_client=GeoServiceClient(self._geo_service_host),
-                order_events_handler=OrderEventsHandler(
-                    publisher=KafkaOrderEventsProducer(
-                        kafka_host=settings.kafka_host,
-                        topic=settings.kafka_order_changed_topic,
-                    )
-                ),
+                outbox_repository=OutboxRepository(tracker),
             )
             await handler.handle(command)
 

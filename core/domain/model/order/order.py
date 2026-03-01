@@ -6,6 +6,7 @@ from uuid import UUID
 from core.domain.events.order import (
     OrderCompletedDomainEvent,
     OrderCreatedDomainEvent,
+    OrderDomainEvent,
 )
 from core.domain.exceptions.order import (
     OrderAlreadyAssigned,
@@ -28,7 +29,7 @@ class Order:
     __volume: int
     __courier_id: UUID | None
     __status: OrderStatus
-    __events: list[OrderCreatedDomainEvent | OrderCompletedDomainEvent]
+    __events: list[OrderDomainEvent]
 
     @classmethod
     def create(
@@ -97,7 +98,7 @@ class Order:
     def id(self) -> UUID:
         return self.__id
 
-    def pull_events(self) -> list[OrderCreatedDomainEvent | OrderCompletedDomainEvent]:
+    def pull_events(self) -> list[OrderDomainEvent]:
         events = self.__events.copy()
         self.__events.clear()
         return events

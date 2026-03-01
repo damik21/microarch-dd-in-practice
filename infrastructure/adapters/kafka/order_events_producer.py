@@ -12,9 +12,6 @@ from infrastructure.adapters.kafka import order_events_pb2
 
 logger = logging.getLogger(__name__)
 
-MAX_SEND_ATTEMPTS = 3
-RETRY_DELAY_SECONDS = 0.2
-
 
 class KafkaOrderEventsProducer(OrderEventsPublisherInterface):
     _producers: ClassVar[dict[str, AIOKafkaProducer]] = {}
@@ -42,25 +39,11 @@ class KafkaOrderEventsProducer(OrderEventsPublisherInterface):
         )
 
     async def _send(self, payload: bytes) -> None:
-        for attempt in range(1, MAX_SEND_ATTEMPTS + 1):
-            try:
-                await self._send_once(payload)
-                return
-            except Exception:
-                if attempt == MAX_SEND_ATTEMPTS:
-                    logger.exception(
-                        "Failed to publish event to Kafka after %s attempts: topic=%s",
-                        MAX_SEND_ATTEMPTS,
-                        self._topic,
-                    )
-                    raise
-                logger.warning(
-                    "Failed to publish event to Kafka, retry %s/%s: topic=%s",
-                    attempt,
-                    MAX_SEND_ATTEMPTS,
-                    self._topic,
-                )
-                await asyncio.sleep(RETRY_DELAY_SECONDS)
+        try:
+            await self._send_once(payload)
+        except Exception:
+            logger.exception("Failed to publish event to Kafka: topic=%s", self._topic)
+            raise
 
     @classmethod
     async def close_all(cls) -> None:

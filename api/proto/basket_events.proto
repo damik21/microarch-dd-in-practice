@@ -1,0 +1,25 @@
+syntax = "proto3";
+package basket.events;
+option go_package = "queues/basketeventspb";
+import "google/protobuf/timestamp.proto";
+
+message BasketConfirmedIntegrationEvent {
+  string basket_id = 1;
+  Address address = 2;
+  int32 volume = 3;
+}
+
+message Address {
+  string street = 1;
+}
+
+message Item {
+  string id = 1;
+  string name = 2;
+  int32 quantity = 3;
+}
+
+message DeliveryPeriod {
+  google.protobuf.Timestamp start = 1;
+  google.protobuf.Timestamp end = 2;
+}

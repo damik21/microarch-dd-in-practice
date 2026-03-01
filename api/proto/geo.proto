@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package geo;
+
+service Geo {
+  rpc GetGeolocation(GetGeolocationRequest) returns (GetGeolocationResponse);
+}
+
+message GetGeolocationRequest {
+  string street = 1;
+}
+
+message Location {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message GetGeolocationResponse {
+  Location location = 1;
+}

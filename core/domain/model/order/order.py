@@ -53,10 +53,10 @@ class Order:
     ) -> Order:
         instance = object.__new__(cls)
         instance.__id = id
-        instance._Order__location = location
-        instance._Order__volume = volume
-        instance._Order__courier_id = courier_id
-        instance._Order__status = status
+        instance.__location = location
+        instance.__volume = volume
+        instance.__courier_id = courier_id
+        instance.__status = status
         return instance
 
     def __init__(

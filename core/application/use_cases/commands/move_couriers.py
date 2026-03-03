@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from core.ports.courier_repository import CourierRepositoryInterface
-from core.ports.order_events_dispatcher import OrderEventsDispatcherInterface
 from core.ports.order_repository import OrderRepositoryInterface
+from core.ports.outbox_repository import OutboxRepositoryInterface
 
 if TYPE_CHECKING:
     from infrastructure.adapters.postgres.repositories.tracker import Tracker
@@ -26,12 +26,12 @@ class MoveCouriersHandler:
         order_repository: OrderRepositoryInterface,
         courier_repository: CourierRepositoryInterface,
         tracker: Tracker,
-        order_events_handler: OrderEventsDispatcherInterface,
+        outbox_repository: OutboxRepositoryInterface,
     ) -> None:
         self._order_repository = order_repository
         self._courier_repository = courier_repository
         self._tracker = tracker
-        self._order_events_handler = order_events_handler
+        self._outbox_repository = outbox_repository
 
     async def handle(self) -> list[MoveResult]:
         results: list[MoveResult] = []
@@ -72,8 +72,8 @@ class MoveCouriersHandler:
                     )
                 )
 
-        for order in orders:
-            for event in order.pull_events():
-                await self._order_events_handler.handle(event)
+            for order in orders:
+                for event in order.pull_events():
+                    await self._outbox_repository.add(event)
 
         return results

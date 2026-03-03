@@ -53,7 +53,7 @@ def tracker() -> MockTracker:
 
 
 @pytest.fixture
-def order_events_handler() -> AsyncMock:
+def outbox_repository() -> AsyncMock:
     return AsyncMock()
 
 
@@ -62,13 +62,13 @@ def handler(
     order_repository: AsyncMock,
     geo_service_client: AsyncMock,
     tracker: MockTracker,
-    order_events_handler: AsyncMock,
+    outbox_repository: AsyncMock,
 ) -> CreateOrderHandler:
     return CreateOrderHandler(
         order_repository=order_repository,
         tracker=tracker,
         geo_service_client=geo_service_client,
-        order_events_handler=order_events_handler,
+        outbox_repository=outbox_repository,
     )
 
 
@@ -77,7 +77,7 @@ async def test_create_order_uses_geo_service(
     handler: CreateOrderHandler,
     order_repository: AsyncMock,
     geo_service_client: AsyncMock,
-    order_events_handler: AsyncMock,
+    outbox_repository: AsyncMock,
 ) -> None:
     geo_service_client.get_location.return_value = Location(x=1, y=1)
     command = CreateOrderCommand(order_id=uuid4(), street="Тестировочная", volume=5)
@@ -88,8 +88,8 @@ async def test_create_order_uses_geo_service(
     order_repository.add.assert_called_once()
     added_order = order_repository.add.call_args[0][0]
     assert added_order.location == Location(x=1, y=1)
-    order_events_handler.handle.assert_called_once()
-    event = order_events_handler.handle.call_args[0][0]
+    outbox_repository.add.assert_called_once()
+    event = outbox_repository.add.call_args[0][0]
     assert isinstance(event, OrderCreatedDomainEvent)
 
 

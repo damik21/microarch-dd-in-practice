@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from core.domain.events.order import (
-    OrderCompletedDomainEvent,
     OrderCreatedDomainEvent,
+    OrderDomainEvent,
 )
 from core.ports.order_events_dispatcher import OrderEventsDispatcherInterface
 from core.ports.order_events_publisher import OrderEventsPublisherInterface
@@ -14,7 +14,7 @@ class OrderEventsHandler(OrderEventsDispatcherInterface):
 
     async def handle(
         self,
-        event: OrderCreatedDomainEvent | OrderCompletedDomainEvent,
+        event: OrderDomainEvent,
     ) -> None:
         if isinstance(event, OrderCreatedDomainEvent):
             await self._publisher.publish_order_created(order_id=event.order_id)

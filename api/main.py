@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.adapters.http.router import router as v1_router
 from api.adapters.kafka.consumers import build_consumers
-from api.tasks import assign_orders, move_couriers, run_periodic
+from api.tasks import assign_orders, move_couriers, process_outbox_events, run_periodic
 from config.config import settings
 from infrastructure.adapters.kafka.order_events_producer import KafkaOrderEventsProducer
 
@@ -28,7 +28,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     move_task = asyncio.create_task(
         run_periodic(move_couriers, interval=1, name="move_couriers")
     )
-    logger.info("Periodic tasks started (assign_orders, move_couriers)")
+    outbox_task = asyncio.create_task(
+        run_periodic(process_outbox_events, interval=1, name="process_outbox_events")
+    )
+    logger.info(
+        "Periodic tasks started (assign_orders, move_couriers, process_outbox_events)"
+    )
 
     consumers = build_consumers(settings)
     for consumer in consumers:
@@ -39,6 +44,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Stopping periodic tasks...")
     assign_task.cancel()
     move_task.cancel()
+    outbox_task.cancel()
     for consumer in consumers:
         await consumer.stop()
     await KafkaOrderEventsProducer.close_all()

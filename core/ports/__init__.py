@@ -4,6 +4,7 @@ from core.ports.order_dispatcher import OrderDispatcherInterface
 from core.ports.order_events_dispatcher import OrderEventsDispatcherInterface
 from core.ports.order_events_publisher import OrderEventsPublisherInterface
 from core.ports.order_repository import OrderRepositoryInterface
+from core.ports.outbox_repository import OutboxRepositoryInterface
 
 __all__ = [
     "OrderDispatcherInterface",
@@ -12,4 +13,5 @@ __all__ = [
     "GeoServiceClientInterface",
     "OrderEventsDispatcherInterface",
     "OrderEventsPublisherInterface",
+    "OutboxRepositoryInterface",
 ]

@@ -16,9 +16,13 @@ from infrastructure.adapters.postgres.repositories.courier_repository import (
 from infrastructure.adapters.postgres.repositories.order_repository import (
     OrderRepository,
 )
+from infrastructure.adapters.postgres.repositories.outbox_repository import (
+    OutboxRepository,
+)
 from infrastructure.db import async_session_maker
 
 logger = logging.getLogger(__name__)
+OUTBOX_BATCH_SIZE = 100
 
 
 async def run_periodic(
@@ -57,17 +61,11 @@ async def assign_orders() -> None:
 async def move_couriers() -> None:
     async with async_session_maker() as session:
         tracker = RepositoryTracker(session)
-        order_events_handler = OrderEventsHandler(
-            publisher=KafkaOrderEventsProducer(
-                kafka_host=settings.kafka_host,
-                topic=settings.kafka_order_changed_topic,
-            )
-        )
         handler = MoveCouriersHandler(
             order_repository=OrderRepository(tracker),
             courier_repository=CourierRepository(tracker),
             tracker=tracker,
-            order_events_handler=order_events_handler,
+            outbox_repository=OutboxRepository(tracker),
         )
         results = await handler.handle()
         for r in results:
@@ -85,3 +83,30 @@ async def move_couriers() -> None:
                     r.courier_id,
                     r.new_location,
                 )
+
+
+async def process_outbox_events() -> None:
+    async with async_session_maker() as session:
+        tracker = RepositoryTracker(session)
+        outbox_repository = OutboxRepository(tracker)
+        order_events_handler = OrderEventsHandler(
+            publisher=KafkaOrderEventsProducer(
+                kafka_host=settings.kafka_host,
+                topic=settings.kafka_order_changed_topic,
+            )
+        )
+
+        async with tracker.transaction():
+            messages = await outbox_repository.get_unprocessed(limit=OUTBOX_BATCH_SIZE)
+            for message in messages:
+                try:
+                    await order_events_handler.handle(message.event)
+                except Exception:
+                    logger.exception(
+                        "Failed to dispatch outbox event: message_id=%s event_name=%s",
+                        message.id,
+                        message.event.name,
+                    )
+                    continue
+
+                await outbox_repository.mark_processed(message.id)

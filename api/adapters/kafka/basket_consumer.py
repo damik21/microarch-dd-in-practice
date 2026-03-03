@@ -3,12 +3,20 @@ from __future__ import annotations
 import logging
 from uuid import UUID
 
-from core.application.use_cases.commands.create_order import CreateOrderCommand, CreateOrderHandler
+from config.config import settings
+from core.application.event_handlers.order_events import OrderEventsHandler
+from core.application.use_cases.commands.create_order import (
+    CreateOrderCommand,
+    CreateOrderHandler,
+)
 from infrastructure.adapters.grpc.geo_service_client import GeoServiceClient
 from infrastructure.adapters.kafka import basket_events_pb2
 from infrastructure.adapters.kafka.base_consumer import BaseKafkaConsumer
+from infrastructure.adapters.kafka.order_events_producer import KafkaOrderEventsProducer
 from infrastructure.adapters.postgres.repositories.base import RepositoryTracker
-from infrastructure.adapters.postgres.repositories.order_repository import OrderRepository
+from infrastructure.adapters.postgres.repositories.order_repository import (
+    OrderRepository,
+)
 from infrastructure.db import async_session_maker
 
 logger = logging.getLogger(__name__)
@@ -22,7 +30,9 @@ class BasketConfirmedConsumer(BaseKafkaConsumer):
         consumer_group: str,
         geo_service_host: str,
     ) -> None:
-        super().__init__(kafka_host=kafka_host, topic=topic, consumer_group=consumer_group)
+        super().__init__(
+            kafka_host=kafka_host, topic=topic, consumer_group=consumer_group
+        )
         self._geo_service_host = geo_service_host
 
     async def _process_message(self, data: bytes) -> None:
@@ -41,6 +51,12 @@ class BasketConfirmedConsumer(BaseKafkaConsumer):
                 order_repository=OrderRepository(tracker),
                 tracker=tracker,
                 geo_service_client=GeoServiceClient(self._geo_service_host),
+                order_events_handler=OrderEventsHandler(
+                    publisher=KafkaOrderEventsProducer(
+                        kafka_host=settings.kafka_host,
+                        topic=settings.kafka_order_changed_topic,
+                    )
+                ),
             )
             await handler.handle(command)
 

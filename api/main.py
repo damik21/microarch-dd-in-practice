@@ -10,6 +10,7 @@ from api.adapters.http.router import router as v1_router
 from api.adapters.kafka.consumers import build_consumers
 from api.tasks import assign_orders, move_couriers, run_periodic
 from config.config import settings
+from infrastructure.adapters.kafka.order_events_producer import KafkaOrderEventsProducer
 
 logging.basicConfig(
     level=logging.INFO,
@@ -40,6 +41,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     move_task.cancel()
     for consumer in consumers:
         await consumer.stop()
+    await KafkaOrderEventsProducer.close_all()
 
 
 app = FastAPI(

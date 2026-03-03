@@ -3,9 +3,12 @@ import logging
 from collections.abc import Callable, Coroutine
 from typing import Any
 
+from config.config import settings
+from core.application.event_handlers.order_events import OrderEventsHandler
 from core.application.use_cases.commands.assign_order import AssignOrderHandler
 from core.application.use_cases.commands.move_couriers import MoveCouriersHandler
 from core.domain.services import OrderDispatcher
+from infrastructure.adapters.kafka.order_events_producer import KafkaOrderEventsProducer
 from infrastructure.adapters.postgres.repositories.base import RepositoryTracker
 from infrastructure.adapters.postgres.repositories.courier_repository import (
     CourierRepository,
@@ -54,10 +57,17 @@ async def assign_orders() -> None:
 async def move_couriers() -> None:
     async with async_session_maker() as session:
         tracker = RepositoryTracker(session)
+        order_events_handler = OrderEventsHandler(
+            publisher=KafkaOrderEventsProducer(
+                kafka_host=settings.kafka_host,
+                topic=settings.kafka_order_changed_topic,
+            )
+        )
         handler = MoveCouriersHandler(
             order_repository=OrderRepository(tracker),
             courier_repository=CourierRepository(tracker),
             tracker=tracker,
+            order_events_handler=order_events_handler,
         )
         results = await handler.handle()
         for r in results:

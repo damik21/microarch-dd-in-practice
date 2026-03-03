@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from core.ports.courier_repository import CourierRepositoryInterface
+from core.ports.order_events_dispatcher import OrderEventsDispatcherInterface
 from core.ports.order_repository import OrderRepositoryInterface
 
 if TYPE_CHECKING:
@@ -25,10 +26,12 @@ class MoveCouriersHandler:
         order_repository: OrderRepositoryInterface,
         courier_repository: CourierRepositoryInterface,
         tracker: Tracker,
+        order_events_handler: OrderEventsDispatcherInterface,
     ) -> None:
         self._order_repository = order_repository
         self._courier_repository = courier_repository
         self._tracker = tracker
+        self._order_events_handler = order_events_handler
 
     async def handle(self) -> list[MoveResult]:
         results: list[MoveResult] = []
@@ -68,5 +71,9 @@ class MoveCouriersHandler:
                         order_completed=order_completed,
                     )
                 )
+
+        for order in orders:
+            for event in order.pull_events():
+                await self._order_events_handler.handle(event)
 
         return results

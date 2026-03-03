@@ -2,6 +2,10 @@ from uuid import uuid4
 
 import pytest
 
+from core.domain.events.order import (
+    OrderCompletedDomainEvent,
+    OrderCreatedDomainEvent,
+)
 from core.domain.exceptions.order import (
     OrderAlreadyAssigned,
     OrderCannotBeAssigned,
@@ -24,6 +28,9 @@ class TestOrder:
         assert order.volume == 5
         assert order.courier_id is None
         assert order.status is OrderStatus.CREATED
+        events = order.pull_events()
+        assert events == [OrderCreatedDomainEvent(order_id=order_id)]
+        assert order.pull_events() == []
 
     def test_create_order_with_invalid_volume_failed(self) -> None:
         location = Location(x=1, y=1)
@@ -78,6 +85,10 @@ class TestOrder:
         order.complete()
 
         assert order.status is OrderStatus.COMPLETED
+        events = order.pull_events()
+        assert isinstance(events[-1], OrderCompletedDomainEvent)
+        assert events[-1].order_id == order.id
+        assert events[-1].courier_id == courier_id
 
     def test_complete_not_assigned_order_failed(self) -> None:
         order = Order.create(id=uuid4(), location=Location(x=1, y=1), volume=5)
